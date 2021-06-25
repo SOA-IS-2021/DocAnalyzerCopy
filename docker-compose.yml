@@ -1,0 +1,92 @@
+﻿version: "3.4"
+
+services:
+  load-balancer:
+    image: jodaniel1409/load-balancer
+    build: "./LoadBalancer"
+    ports:
+      - 4000:80
+
+  identity-server:
+    image: jodaniel1409/identity-server
+    build: "./IdentityServer"
+    ports:
+      - 5000:5000
+    environment:
+      IDENTITY_ISSUER: ${IDENTITY_ISSUER}
+        
+  web-client:
+    image: jodaniel1409/web-client
+    build: "./AnalyzerWeb"
+    ports:
+      - 3000:3000
+    environment:
+      IDENTITY_AUTHORITY: ${IDENTITY_ISSUER}
+    depends_on:
+      - identity-server
+      
+  main-api:
+    image: jodaniel1409/main-api
+    build: "./DocAnalyzerAPI"
+    ports:
+      - 3010:80
+    environment:
+      IDENTITY_AUTHORITY: ${IDENTITY_ISSUER}
+    depends_on:
+      - identity-server
+      - rabbitmq-server
+
+  profanity-api:
+    image: jodaniel1409/profanity-api
+    build: "./ProfanityAPI"
+    ports:
+      - 3020:3000
+    environment:
+      IDENTITY_AUTHORITY: ${IDENTITY_ISSUER}
+    depends_on:
+      - identity-server
+      - rabbitmq-server
+      - mongo
+
+  sentiment-api:
+    image: jodaniel1409/sentiment-api
+    build: "./SentimentAPI"
+    environment:
+      IDENTITY_AUTHORITY: ${IDENTITY_ISSUER}
+    depends_on:
+      - identity-server
+      - rabbitmq-server
+      - mongo
+
+  rabbitmq-server:
+    image: rabbitmq:3-management
+    hostname: rabbitserver
+    ports: 
+      - 15672:15672
+      - 5672:5672
+
+  mongo:
+    image: mongo
+    environment:
+        - MONGO_INITDB_ROOT_USERNAME=${MONGO_ROOT_USER}
+        - MONGO_INITDB_ROOT_PASSWORD=${MONGO_ROOT_PASSWORD}
+    ports:
+      - 27017:27017
+
+  mongo-express:
+      image: mongo-express
+      environment:
+          - ME_CONFIG_MONGODB_SERVER=mongo
+          - ME_CONFIG_MONGODB_PORT=27017
+          - ME_CONFIG_MONGODB_ENABLE_ADMIN=true
+          - ME_CONFIG_MONGODB_ADMINUSERNAME=${MONGO_ROOT_USER}
+          - ME_CONFIG_MONGODB_ADMINPASSWORD=${MONGO_ROOT_PASSWORD}
+          - ME_CONFIG_MONGODB_AUTH_DATABASE=admin
+          - ME_CONFIG_MONGODB_AUTH_USERNAME=${MONGO_ROOT_USER}
+          - ME_CONFIG_MONGODB_AUTH_PASSWORD=${MONGO_ROOT_PASSWORD}
+          - ME_CONFIG_BASICAUTH_USERNAME=${MONGOEXPRESS_LOGIN}
+          - ME_CONFIG_BASICAUTH_PASSWORD=${MONGOEXPRESS_PASSWORD}
+      depends_on:
+          - mongo
+      ports:
+        - "8888:8081"

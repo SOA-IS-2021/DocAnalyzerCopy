@@ -1,0 +1,13 @@
+{
+  "profiles": {
+    "SelfHost": {
+      "commandName": "Project",
+      "launchBrowser": true,
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "IDENTITY_ISSUER": "http://identity-server:5000"
+      },
+      "applicationUrl": "http://0.0.0.0:5000"
+    }
+  }
+}

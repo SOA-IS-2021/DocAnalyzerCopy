@@ -1,0 +1,16 @@
+﻿version: "3.4"
+
+services:
+  identity-server:
+    volumes:
+      - ./IdentityServer:/app:cached
+      - ./IdentityServer/certs:/https/
+      - ./IdentityServer/certs:/root/.aspnet/https/
+      - type: bind # Using a bind volume as only this single file from `certs` directory should end up in the container.
+        source: ./certs/doc-analyzer.cer
+        target: /https-root/doc-analyzer.cer
+    environment:
+      - ASPNETCORE_URLS="http://+;"
+      - ASPNETCORE_HTTP_PORT=5000
+      - ASPNETCORE_Kestrel__Certificates__Default__Password=secret
+      - ASPNETCORE_Kestrel__Certificates__Default__Path=/https/identity-server.pfx
